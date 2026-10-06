@@ -99,7 +99,7 @@ Ask Muse things like:
 
 > Why is charging slow? Call energy.recommend first, then explain the cap. Do not change the charger.
 
-Fill `~/muse/energy.json` on this machine. `kwh` is energy from the plug. A missing file returns a template. This command does not set charger power, and it does not need Muse cloud to compute the recommendation.
+Fill `~/muse/energy.json` on this machine, then `sudo systemctl restart musegadget` once so Muse learns the command. `kwh` is energy from the plug. A missing file returns a template. The Pi computes the recommendation without Muse cloud. Architecture, the file, and what the society does and does not save are in the [repository README](../README.md#community-energy).
 
 ## Hack and extend it
 
