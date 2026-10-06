@@ -95,6 +95,17 @@ COMMAND_SPECS = {
         "required": {},
         "optional": {},
     },
+    "energy.recommend": {
+        "description": (
+            "Read this community's charging notes from ~/muse/energy.json and "
+            "recommend how to stay under the site cap. Call this before answering "
+            "why charging is slow or when a car will be ready. Recommend only: "
+            "never set charger power, spend money, or place an order. The "
+            "charger and the car decide whether a rate is allowed."
+        ),
+        "required": {},
+        "optional": {},
+    },
 }
 
 
@@ -136,6 +147,8 @@ class Executor:
                 return self.file_op(command.split(".")[1], params)
             if command == "device.health":
                 return ok(device_health())
+            if command == "energy.recommend":
+                return self.energy_recommend()
         except Exception as exc:
             log.exception("%s failed", command)
             return error(f"{type(exc).__name__}: {exc}")
@@ -203,6 +216,17 @@ class Executor:
             "truncated": out_cut or err_cut,
             "duration_ms": int((time.monotonic() - started) * 1000),
         })
+
+    def energy_recommend(self) -> dict:
+        # Params are ignored: only ~/muse/energy.json for this account is read.
+        proc = subprocess.run(
+            [sys.executable, "-m", "musegadget.energy"],
+            capture_output=True, timeout=30, cwd="/", **self._child_options(),
+        )
+        try:
+            return json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            return error(proc.stderr.decode(errors="replace")[-2000:] or "energy recommend failed")
 
     def file_op(self, op: str, params: dict) -> dict:
         request = json.dumps({**params, "op": op})

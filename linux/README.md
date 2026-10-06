@@ -84,6 +84,7 @@ an active man-in-the-middle attack. Set it up on a network you trust.
 | `file.read` | Reads a file, 64 KB at a time |
 | `file.write` | Writes a file, 64 KB at a time, replacing it only when complete |
 | `device.health` | Reports uptime, load, memory, disk and temperature |
+| `energy.recommend` | Reads `~/muse/energy.json` and recommends how to stay under the site cap. It does not change a charger |
 
 Commands run as the account you installed for, with exactly that account's
 permissions. If it can use sudo, so can Muse.
@@ -95,6 +96,10 @@ Ask Muse things like:
 > Install Home Assistant on my Pi and tell me how to open it.
 
 > Every morning at 7, check if my Pi's backups ran and tell me if they didn't.
+
+> Why is charging slow? Call energy.recommend first, then explain the cap. Do not change the charger.
+
+Fill `~/muse/energy.json` on this machine. `kwh` is energy from the plug. A missing file returns a template. This command does not set charger power, and it does not need Muse cloud to compute the recommendation.
 
 ## Hack and extend it
 

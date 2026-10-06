@@ -149,3 +149,36 @@ def test_file_paths_must_be_absolute(ex, monkeypatch):
 def test_device_health_reports_basics(ex):
     payload = ex.run("device.health", {})["payload"]
     assert payload["version"] and payload["hostname"] and "disk_gb" in payload
+
+
+def test_energy_recommend_uses_home_file_and_ignores_paths(ex, tmp_path, monkeypatch):
+    _child_env_passes_pythonpath(monkeypatch)
+    secret = tmp_path / "secret.txt"
+    secret.write_text("do-not-leak")
+    missing = ex.run("energy.recommend", {"path": str(secret)})
+    assert missing["ok"], missing
+    assert missing["payload"]["missing"] is True
+    assert "do-not-leak" not in json.dumps(missing)
+
+    muse = tmp_path / "muse"
+    muse.mkdir()
+    (muse / "energy.json").write_text(json.dumps({
+        "site_limit_kw": 10,
+        "building_kw": 4,
+        "solar_kw": 0,
+        "arrive": "18:00",
+        "depart": "20:00",
+        "cars": [
+            {"name": "A-101", "kwh": 3, "kw_max": 7},
+            {"name": "B-204", "kwh": 3, "kw_max": 7},
+        ],
+    }))
+    result = ex.run("energy.recommend", {"path": str(secret)})
+    assert result["ok"], result
+    payload = result["payload"]
+    assert payload["peak_if_now_kw"] == 18.0
+    assert payload["peak_if_spread_kw"] <= 10
+    assert payload["on_time"] is True
+    assert "I did not change any charger." in payload["say"]
+    assert "do-not-leak" not in json.dumps(payload)
+    assert "energy.recommend" in executor.COMMAND_SPECS
